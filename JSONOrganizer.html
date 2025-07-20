@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Album Sorter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            margin: 0;
+            background: linear-gradient(to bottom right, #1e1e2f, #1e1e24);
+            color: #dcd9f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background-color: #2b2844;
+            border: 1px solid #413a63;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #c792ea;
+            font-size: 2.5em;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .header p {
+            color: #9f9fce;
+            font-size: 1.1em;
+        }
+
+        /* File Upload Area */
+        #drop-zone {
+            display: block; /* Ensures the label behaves as a container */
+            border: 2px dashed #544a7d;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            background-color: rgba(43, 40, 68, 0.5);
+            transition: background-color 0.3s, border-color 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        #drop-zone.drag-over {
+            background-color: rgba(84, 74, 125, 0.7);
+            border-color: #c792ea;
+        }
+        
+        #drop-zone p {
+            margin: 0;
+            font-size: 1.2em;
+            color: #9f9fce;
+            pointer-events: none;
+        }
+        
+        #drop-zone .file-name {
+            font-size: 0.9em;
+            margin-top: 0.5rem;
+            color: #c792ea;
+            font-weight: bold;
+        }
+
+        #file-upload-input {
+            display: none;
+        }
+        
+        /* Controls Container */
+        #controls-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+            height: 40px;
+            flex-wrap: wrap;
+        }
+
+        /* Control Buttons & Select */
+        .control-button, .styled-select {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            font-size: 0.9em;
+            background-color: #413a63;
+            border: 1px solid #544a7d;
+            border-radius: 8px;
+            color: #c792ea;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+        
+        .control-button:hover, .styled-select:hover {
+            background-color: #5d548b;
+            border-color: #c792ea;
+        }
+        
+        .control-button svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        
+        .styled-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23c792ea%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: .65em auto;
+            padding-right: 35px;
+        }
+
+        /* Results List */
+        #results-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border-top: 1px solid #413a63;
+        }
+
+        .result-list-item {
+            border-bottom: 1px solid #413a63;
+        }
+
+        .result-item-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .result-item-header:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .result-item-header .title-container {
+            min-width: 0;
+            flex-grow: 1;
+        }
+        
+        .details-toggle {
+            color: #9f9fce;
+            transition: transform 0.2s ease-in-out;
+            width: 16px;
+            flex-shrink: 0;
+        }
+
+        .details-toggle.open {
+            transform: rotate(90deg);
+        }
+        
+        .result-item-header .rank {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #9f9fce;
+            text-align: right;
+            width: 2rem;
+            flex-shrink: 0;
+        }
+
+        .result-item-header .title-link {
+            color: #dcd9f4;
+            text-decoration: none;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block; /* Needed for text-overflow */
+        }
+        
+        .result-item-header .title-link:hover {
+            color: #c792ea;
+            text-decoration: underline;
+        }
+
+        .result-item-header .value {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e1e2f;
+            color: #9f9fce;
+            padding: 0.3rem 0.6rem;
+            border-radius: 5px;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+
+        /* Details Panel */
+        .details-panel {
+            background-color: rgba(30, 30, 47, 0.5);
+            padding: 1rem 1.5rem 1.5rem 1.5rem;
+            border-top: 1px solid #413a63;
+        }
+        
+        .details-cover-image {
+            display: block;
+            max-width: 200px;
+            border-radius: 8px;
+            margin: 0 auto 1.5rem auto;
+            background-color: #1e1e2f;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .details-panel-dl {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.75rem 1.5rem;
+            font-size: 0.9em;
+        }
+        
+        .details-panel-dl dt {
+            font-weight: bold;
+            color: #9f9fce;
+            grid-column: 1;
+        }
+        
+        .details-panel-dl dd {
+            margin: 0;
+            grid-column: 2;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .details-panel-dl .tag {
+            display: inline-block;
+            background-color: #413a63;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+        
+        .details-panel-dl .track-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .details-panel-dl .track-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Total Duration */
+        #total-duration-container {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #544a7d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #total-duration-container .total-label {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #c792ea;
+        }
+        
+        #total-duration-container .total-duration {
+            font-size: 1.2em;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #c792ea;
+            color: #1e1e2f;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        /* Error Box */
+        #error-box {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: rgba(224, 108, 117, 0.1);
+            border: 1px solid #e06c75;
+            color: #e06c75;
+            border-radius: 8px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>JSON Organizer</h1>
+            <p>Upload a JSON file to organize its data.</p>
+        </div>
+
+        <label for="file-upload-input" id="drop-zone">
+            <p>Click to upload or drag and drop a JSON file</p>
+            <p class="file-name" id="file-name">No file selected</p>
+        </label>
+        <input id="file-upload-input" type="file" accept=".json" />
+        
+        <div id="controls-container">
+             <select id="sort-by-select" class="styled-select hidden">
+                <option value="duration">Sort by Duration</option>
+                <option value="date">Sort by Date</option>
+                <option value="tracks">Sort by Tracks</option>
+                <option value="title">Sort by Title</option>
+             </select>
+             <div style="flex-grow: 1;"></div> <button id="save-html-button" class="control-button hidden">
+                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                 <span>Save List</span>
+             </button>
+             <button id="reverse-sort-button" class="control-button hidden">
+                <svg id="icon-asc" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4 4 4m-8 4h1.5M3 16h4m4 0h1.5m3 0h.5"/></svg>
+                <svg id="icon-desc" xmlns="http://www.w3.org/2000/svg" class="hidden" fill="none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h13M3 8h9m-9 4h9m-9 4h13m0-4l-4 4 4 4"/></svg>
+                <span id="sort-direction-text">Shortest First</span>
+            </button>
+        </div>
+        
+        <div id="results-container">
+            </div>
+        
+        <div id="error-box">
+            <p id="error-message"></p>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM element references ---
+        const fileUploadInput = document.getElementById('file-upload-input');
+        const dropZone = document.getElementById('drop-zone');
+        const fileNameDisplay = document.getElementById('file-name');
+        const resultsContainer = document.getElementById('results-container');
+        const errorBox = document.getElementById('error-box');
+        const errorMessage = document.getElementById('error-message');
+        const sortBySelect = document.getElementById('sort-by-select');
+        const reverseSortButton = document.getElementById('reverse-sort-button');
+        const saveHtmlButton = document.getElementById('save-html-button');
+        const sortDirectionText = document.getElementById('sort-direction-text');
+        const iconAsc = document.getElementById('icon-asc');
+        const iconDesc = document.getElementById('icon-desc');
+
+        // --- State variables ---
+        let processedAlbums = [];
+        let sortAscending = true;
+        let sortBy = 'title'; // 'duration', 'date', 'tracks', 'title'
+        let topLevelArtistName = '';
+
+        // --- Event Listeners ---
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileUploadInput.files = files;
+                handleFile(files[0]);
+            }
+        });
+        fileUploadInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        sortBySelect.addEventListener('change', (e) => {
+            sortBy = e.target.value;
+            sortAndDisplayData();
+        });
+
+        reverseSortButton.addEventListener('click', () => {
+            sortAscending = !sortAscending; // Toggle sort direction
+            sortAndDisplayData(); // Re-sort and display
+        });
+        
+        saveHtmlButton.addEventListener('click', generateAndDownloadHTML);
+
+        resultsContainer.addEventListener('click', function(e) {
+            const header = e.target.closest('.result-item-header');
+            if (header) {
+                const listItem = header.parentElement;
+                const detailsPanel = listItem.querySelector('.details-panel');
+                const toggleIcon = listItem.querySelector('.details-toggle');
+                
+                if (detailsPanel.innerHTML === '') {
+                    // Populate on first click
+                    const index = parseInt(listItem.dataset.index, 10);
+                    const album = processedAlbums[index];
+                    
+                    // Add album cover if it exists
+                    if (album.coverUrl_0) {
+                        const coverImg = document.createElement('img');
+                        coverImg.src = album.coverUrl_0;
+                        coverImg.alt = `Cover for ${decodeHTMLEntities(album.title)}`;
+                        coverImg.className = 'details-cover-image';
+                        detailsPanel.appendChild(coverImg);
+                    }
+
+                    detailsPanel.appendChild(createDetailsList(album));
+                }
+
+                detailsPanel.classList.toggle('hidden');
+                toggleIcon.classList.toggle('open');
+            }
+        });
+
+        // --- Functions ---
+        function formatDate(dateObj) {
+            if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj)) {
+                return 'N/A';
+            }
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+            const year = dateObj.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function handleFile(file) {
+            if (file) {
+                fileNameDisplay.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+                        hideError();
+                        processInitialData(jsonData); // Process and sort automatically
+                    } catch (err) {
+                        showError('Invalid JSON file. Please check the file format.');
+                        processedAlbums = [];
+                    }
+                };
+                reader.onerror = () => {
+                    showError('Error reading the file.');
+                    processedAlbums = [];
+                };
+                reader.readAsText(file);
+            } else {
+                fileNameDisplay.textContent = 'No file selected';
+                processedAlbums = [];
+                resultsContainer.innerHTML = ''; // Clear results
+            }
+        }
+        
+        function processInitialData(jsonData) {
+            try {
+                const mainKey = Object.keys(jsonData)[0];
+                if (!mainKey || !Array.isArray(jsonData[mainKey])) {
+                    showError('JSON format is incorrect. Expected a single key with an array of albums.');
+                    return;
+                }
+                topLevelArtistName = mainKey; // Store artist name
+                const albums = jsonData[mainKey];
+
+                processedAlbums = albums.map(album => {
+                    const totalDurationSeconds = (album.trackinfo || []).reduce((total, track) => {
+                        return total + durationToSeconds(track.duration || '00:00');
+                    }, 0);
+                    
+                    return {
+                        ...album, // Keep all original album data
+                        totalDuration: totalDurationSeconds,
+                        datePublishedObj: new Date(album.datePublished),
+                        trackCount: (album.trackinfo || []).length
+                    };
+                });
+                
+                sortAndDisplayData();
+
+            } catch (err) {
+                console.error('Processing error:', err);
+                showError('An error occurred while processing the data. Check console for details.');
+            }
+        }
+        
+        function sortAndDisplayData() {
+            if (processedAlbums.length === 0) {
+                sortBySelect.classList.add('hidden');
+                reverseSortButton.classList.add('hidden');
+                saveHtmlButton.classList.add('hidden');
+                return;
+            };
+
+            // Sync the dropdown with the current sort state
+            sortBySelect.value = sortBy;
+            
+            processedAlbums.sort((a, b) => {
+                let valA, valB;
+                switch(sortBy) {
+                    case 'date':
+                        valA = a.datePublishedObj;
+                        valB = b.datePublishedObj;
+                        break;
+                    case 'tracks':
+                        valA = a.trackCount;
+                        valB = b.trackCount;
+                        break;
+                    case 'title':
+                        return sortAscending 
+                            ? a.title.localeCompare(b.title) 
+                            : b.title.localeCompare(a.title);
+                    case 'duration':
+                    default:
+                        valA = a.totalDuration;
+                        valB = b.totalDuration;
+                        break;
+                }
+
+                if (valA < valB) return sortAscending ? -1 : 1;
+                if (valA > valB) return sortAscending ? 1 : -1;
+                return 0;
+            });
+            
+            updateSortButtonUI();
+            displayResults(processedAlbums);
+            sortBySelect.classList.remove('hidden');
+            reverseSortButton.classList.remove('hidden');
+            saveHtmlButton.classList.remove('hidden');
+        }
+
+        function updateSortButtonUI() {
+            let ascText = '', descText = '';
+            switch(sortBy) {
+                case 'date':
+                    ascText = 'Oldest First';
+                    descText = 'Newest First';
+                    break;
+                case 'tracks':
+                    ascText = 'Fewest Tracks';
+                    descText = 'Most Tracks';
+                    break;
+                case 'title':
+                    ascText = 'A-Z';
+                    descText = 'Z-A';
+                    break;
+                case 'duration':
+                default:
+                    ascText = 'Shortest First';
+                    descText = 'Longest First';
+                    break;
+            }
+
+            if (sortAscending) {
+                sortDirectionText.textContent = ascText;
+                iconAsc.classList.remove('hidden');
+                iconDesc.classList.add('hidden');
+            } else {
+                sortDirectionText.textContent = descText;
+                iconAsc.classList.add('hidden');
+                iconDesc.classList.remove('hidden');
+            }
+        }
+        
+        function displayResults(sortedAlbums) {
+            resultsContainer.innerHTML = ''; // Clear previous results
+
+            const list = document.createElement('ul');
+            list.id = 'results-list';
+
+            sortedAlbums.forEach((album, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'result-list-item';
+                listItem.dataset.index = index;
+                
+                let displayValue = '';
+                let valueClass = 'value';
+                switch(sortBy) {
+                    case 'date':
+                        displayValue = formatDate(album.datePublishedObj);
+                        break;
+                    case 'tracks':
+                        displayValue = `${album.trackCount} track${album.trackCount === 1 ? '' : 's'}`;
+                        break;
+                    case 'title':
+                        displayValue = ''; // No value needed when sorting by title
+                        valueClass = 'value hidden';
+                        break;
+                    case 'duration':
+                    default:
+                        displayValue = secondsToDurationFormat(album.totalDuration);
+                        break;
+                }
+
+                listItem.innerHTML = `
+                    <div class="result-item-header">
+                        <span class="details-toggle">▶</span>
+                        <span class="rank">${index + 1}</span>
+                        <div class="title-container">
+                            <a href="${album.url}" target="_blank" rel="noopener noreferrer" class="title-link" title="${decodeHTMLEntities(album.title)}">${decodeHTMLEntities(album.title)}</a>
+                        </div>
+                        <span class="${valueClass}">${displayValue}</span>
+                    </div>
+                    <div class="details-panel hidden"></div>
+                `;
+                list.appendChild(listItem);
+            });
+            
+            resultsContainer.appendChild(list);
+
+            const grandTotalSeconds = sortedAlbums.reduce((sum, album) => sum + album.totalDuration, 0);
+
+            const totalDiv = document.createElement('div');
+            totalDiv.id = 'total-duration-container';
+            totalDiv.innerHTML = `
+                <span class="total-label">Total Duration:</span>
+                <span class="total-duration">${secondsToDurationFormat(grandTotalSeconds)}</span>
+            `;
+
+            resultsContainer.appendChild(totalDiv);
+        }
+
+        function cleanText(text) {
+            if (!text || typeof text !== 'string') return null;
+            return text
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .join('\n');
+        }
+
+        function createDetailsList(album) {
+            const dl = document.createElement('dl');
+            dl.className = 'details-panel-dl';
+
+            const cleanedAbout = cleanText(album.about);
+            const cleanedCredits = cleanText(album.credits);
+
+            const details = {
+                'Tags': (album.tags || []).map(tag => `<span class="tag">${tag}</span>`).join(''),
+                'Item ID': album.item_id || 'N/A',
+                'Date Published': formatDate(album.datePublishedObj),
+                'About': cleanedAbout,
+                'Credits': cleanedCredits,
+                'License': album.license || 'N/A',
+                'Track Info': (album.trackinfo && album.trackinfo.length > 0) 
+                    ? `<ul class="track-list">${album.trackinfo.map(t => `<li class="track-item"><span>${decodeHTMLEntities(t.title)}</span><span>${t.duration}</span></li>`).join('')}</ul>`
+                    : 'N/A'
+            };
+
+            for (const [key, value] of Object.entries(details)) {
+                if (value && value !== 'N/A' && value.length > 0) {
+                    const dt = document.createElement('dt');
+                    dt.textContent = key;
+                    const dd = document.createElement('dd');
+                    dd.innerHTML = value;
+                    dl.appendChild(dt);
+                    dl.appendChild(dd);
+                }
+            }
+            return dl;
+        }
+
+        function generateAndDownloadHTML() {
+            const pageTitle = `${topLevelArtistName} albums`;
+            const albumsDataString = JSON.stringify(processedAlbums.map(a => ({...a, datePublished: a.datePublishedObj.toISOString() })));
+            const initialSortAscending = sortAscending;
+            const initialSortBy = sortBy;
+
+            const exportHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${pageTitle}</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            margin: 0;
+            background: linear-gradient(to bottom right, #1e1e2f, #1e1e24);
+            color: #dcd9f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background-color: #2b2844;
+            border: 1px solid #413a63;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #c792ea;
+            font-size: 2.5em;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .header p {
+            color: #9f9fce;
+            font-size: 1.1em;
+        }
+
+        /* Controls Container */
+        #controls-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+            height: 40px;
+            flex-wrap: wrap;
+        }
+
+        /* Control Buttons & Select */
+        .control-button, .styled-select {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            font-size: 0.9em;
+            background-color: #413a63;
+            border: 1px solid #544a7d;
+            border-radius: 8px;
+            color: #c792ea;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+        
+        .control-button:hover, .styled-select:hover {
+            background-color: #5d548b;
+            border-color: #c792ea;
+        }
+        
+        .control-button svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        
+        .styled-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23c792ea%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: .65em auto;
+            padding-right: 35px;
+        }
+
+        /* Results List */
+        #results-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border-top: 1px solid #413a63;
+        }
+
+        .result-list-item {
+            border-bottom: 1px solid #413a63;
+        }
+
+        .result-item-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .result-item-header:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .result-item-header .title-container {
+            min-width: 0;
+            flex-grow: 1;
+        }
+        
+        .details-toggle {
+            color: #9f9fce;
+            transition: transform 0.2s ease-in-out;
+            width: 16px;
+            flex-shrink: 0;
+        }
+
+        .details-toggle.open {
+            transform: rotate(90deg);
+        }
+        
+        .result-item-header .rank {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #9f9fce;
+            text-align: right;
+            width: 2rem;
+            flex-shrink: 0;
+        }
+
+        .result-item-header .title-link {
+            color: #dcd9f4;
+            text-decoration: none;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+        
+        .result-item-header .title-link:hover {
+            color: #c792ea;
+            text-decoration: underline;
+        }
+
+        .result-item-header .value {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e1e2f;
+            color: #9f9fce;
+            padding: 0.3rem 0.6rem;
+            border-radius: 5px;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+
+        /* Details Panel */
+        .details-panel {
+            background-color: rgba(30, 30, 47, 0.5);
+            padding: 1rem 1.5rem 1.5rem 1.5rem;
+            border-top: 1px solid #413a63;
+        }
+        
+        .details-cover-image {
+            display: block;
+            max-width: 200px;
+            border-radius: 8px;
+            margin: 0 auto 1.5rem auto;
+            background-color: #1e1e2f;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .details-panel-dl {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.75rem 1.5rem;
+            font-size: 0.9em;
+        }
+        
+        .details-panel-dl dt {
+            font-weight: bold;
+            color: #9f9fce;
+            grid-column: 1;
+        }
+        
+        .details-panel-dl dd {
+            margin: 0;
+            grid-column: 2;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .details-panel-dl .tag {
+            display: inline-block;
+            background-color: #413a63;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+        }
+        
+        .details-panel-dl .track-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .details-panel-dl .track-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Total Duration */
+        #total-duration-container {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #544a7d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #total-duration-container .total-label {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #c792ea;
+        }
+        
+        #total-duration-container .total-duration {
+            font-size: 1.2em;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #c792ea;
+            color: #1e1e2f;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Hide elements not needed in the export */
+        #drop-zone, #save-html-button { 
+            display: none; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>${pageTitle}</h1>
+        </div>
+        <div id="controls-container">
+            <select id="sort-by-select" class="styled-select">
+                <option value="duration">Sort by Duration</option>
+                <option value="date">Sort by Date</option>
+                <option value="tracks">Sort by Tracks</option>
+                <option value="title">Sort by Title</option>
+             </select>
+             <div style="flex-grow: 1;"></div> <button id="reverse-sort-button" class="control-button">
+                <svg id="icon-asc" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4 4 4m-8 4h1.5M3 16h4m4 0h1.5m3 0h.5"/></svg>
+                <svg id="icon-desc" xmlns="http://www.w3.org/2000/svg" class="hidden" fill="none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h13M3 8h9m-9 4h9m-9 4h13m0-4l-4 4 4 4"/></svg>
+                <span id="sort-direction-text">Sort</span>
+            </button>
+        </div>
+        <div id="results-container"></div>
+    </div>
+    <script>
+        let processedAlbums = ${albumsDataString}.map(a => ({...a, datePublishedObj: new Date(a.datePublished)}));
+        let sortAscending = ${initialSortAscending};
+        let sortBy = '${initialSortBy}';
+
+        const resultsContainer = document.getElementById('results-container');
+        const reverseSortButton = document.getElementById('reverse-sort-button');
+        const sortBySelect = document.getElementById('sort-by-select');
+        const sortDirectionText = document.getElementById('sort-direction-text');
+        const iconAsc = document.getElementById('icon-asc');
+        const iconDesc = document.getElementById('icon-desc');
+        
+        function formatDate(dateObj) {
+            if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj)) {
+                return 'N/A';
+            }
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const year = dateObj.getFullYear();
+            return \`\${day}/\${month}/\${year}\`;
+        }
+
+        function decodeHTMLEntities(text) {
+            if (!text) return '';
+            const textArea = document.createElement('textarea');
+            textArea.innerHTML = text;
+            return textArea.value;
+        }
+
+        function secondsToDurationFormat(totalSeconds) {
+            if (isNaN(totalSeconds) || totalSeconds < 0) return '00:00:00';
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            const pad = (num) => String(num).padStart(2, '0');
+            return \`\${pad(hours)}:\${pad(minutes)}:\${pad(seconds)}\`;
+        }
+        
+        function cleanText(text) {
+            if (!text || typeof text !== 'string') return null;
+            return text
+                .split('\\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .join('\\n');
+        }
+
+        function createDetailsList(album) {
+            const dl = document.createElement('dl');
+            dl.className = 'details-panel-dl';
+            const cleanedAbout = cleanText(album.about);
+            const cleanedCredits = cleanText(album.credits);
+            const details = {
+                'Tags': (album.tags || []).map(tag => \`<span class="tag">\${tag}</span>\`).join(''),
+                'Item ID': album.item_id || 'N/A',
+                'Date Published': formatDate(album.datePublishedObj),
+                'About': cleanedAbout,
+                'Credits': cleanedCredits,
+                'License': album.license || 'N/A',
+                'Track Info': (album.trackinfo && album.trackinfo.length > 0) 
+                    ? \`<ul class="track-list">\${album.trackinfo.map(t => \`<li class="track-item"><span>\${decodeHTMLEntities(t.title)}</span><span>\${t.duration}</span></li>\`).join('')}</ul>\`
+                    : 'N/A'
+            };
+            for (const [key, value] of Object.entries(details)) {
+                if (value && value !== 'N/A' && value.length > 0) {
+                    const dt = document.createElement('dt');
+                    dt.textContent = key;
+                    const dd = document.createElement('dd');
+                    dd.innerHTML = value;
+                    dl.appendChild(dt);
+                    dl.appendChild(dd);
+                }
+            }
+            return dl;
+        }
+
+        function displayResults(sortedAlbums) {
+            resultsContainer.innerHTML = '';
+            const list = document.createElement('ul');
+            list.id = 'results-list';
+            sortedAlbums.forEach((album, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'result-list-item';
+                listItem.dataset.index = index;
+                let displayValue = '';
+                let valueClass = 'value';
+                switch(sortBy) {
+                    case 'date': displayValue = formatDate(album.datePublishedObj); break;
+                    case 'tracks': displayValue = \`\${album.trackCount} track\${album.trackCount === 1 ? '' : 's'}\`; break;
+                    case 'title': displayValue = ''; valueClass = 'value hidden'; break;
+                    default: displayValue = secondsToDurationFormat(album.totalDuration); break;
+                }
+                listItem.innerHTML = \`
+                    <div class="result-item-header">
+                        <span class="details-toggle">▶</span>
+                        <span class="rank">\${index + 1}</span>
+                        <div class="title-container">
+                            <a href="\${album.url}" target="_blank" rel="noopener noreferrer" class="title-link" title="\${decodeHTMLEntities(album.title)}">\${decodeHTMLEntities(album.title)}</a>
+                        </div>
+                        <span class="\${valueClass}">\${displayValue}</span>
+                    </div>
+                    <div class="details-panel hidden"></div>
+                \`;
+                list.appendChild(listItem);
+            });
+            resultsContainer.appendChild(list);
+            const grandTotalSeconds = sortedAlbums.reduce((sum, album) => sum + album.totalDuration, 0);
+            const totalDiv = document.createElement('div');
+            totalDiv.id = 'total-duration-container';
+            totalDiv.innerHTML = \`
+                <span class="total-label">Total Duration:</span>
+                <span class="total-duration">\${secondsToDurationFormat(grandTotalSeconds)}</span>
+            \`;
+            resultsContainer.appendChild(totalDiv);
+        }
+
+        function updateSortButtonUI() {
+            let ascText = '', descText = '';
+            switch(sortBy) {
+                case 'date': ascText = 'Oldest First'; descText = 'Newest First'; break;
+                case 'tracks': ascText = 'Fewest Tracks'; descText = 'Most Tracks'; break;
+                case 'title': ascText = 'A-Z'; descText = 'Z-A'; break;
+                default: ascText = 'Shortest First'; descText = 'Longest First'; break;
+            }
+            if (sortAscending) {
+                sortDirectionText.textContent = ascText;
+                iconAsc.classList.remove('hidden');
+                iconDesc.classList.add('hidden');
+            } else {
+                sortDirectionText.textContent = descText;
+                iconAsc.classList.add('hidden');
+                iconDesc.classList.remove('hidden');
+            }
+        }
+
+        function sortAndDisplayData() {
+            processedAlbums.sort((a, b) => {
+                let valA, valB;
+                switch(sortBy) {
+                    case 'date': valA = a.datePublishedObj; valB = b.datePublishedObj; break;
+                    case 'tracks': valA = a.trackCount; valB = b.trackCount; break;
+                    case 'title': return sortAscending ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title);
+                    default: valA = a.totalDuration; valB = b.totalDuration; break;
+                }
+                if (valA < valB) return sortAscending ? -1 : 1;
+                if (valA > valB) return sortAscending ? 1 : -1;
+                return 0;
+            });
+            displayResults(processedAlbums);
+        }
+        
+        resultsContainer.addEventListener('click', function(e) {
+            const header = e.target.closest('.result-item-header');
+            if (header) {
+                const listItem = header.parentElement;
+                const detailsPanel = listItem.querySelector('.details-panel');
+                const toggleIcon = listItem.querySelector('.details-toggle');
+                if (detailsPanel.innerHTML === '') {
+                    const index = parseInt(listItem.dataset.index, 10);
+                    const album = processedAlbums[index];
+
+                    if (album.coverUrl_0) {
+                        const coverImg = document.createElement('img');
+                        coverImg.src = album.coverUrl_0;
+                        coverImg.alt = \`Cover for \${decodeHTMLEntities(album.title)}\`;
+                        coverImg.className = 'details-cover-image';
+                        detailsPanel.appendChild(coverImg);
+                    }
+
+                    detailsPanel.appendChild(createDetailsList(album));
+                }
+                detailsPanel.classList.toggle('hidden');
+                toggleIcon.classList.toggle('open');
+            }
+        });
+
+        reverseSortButton.addEventListener('click', () => {
+            sortAscending = !sortAscending;
+            sortAndDisplayData();
+        });
+        
+        sortBySelect.addEventListener('change', (e) => {
+            sortBy = e.target.value;
+            sortAndDisplayData();
+        });
+
+        window.onload = () => {
+            sortBySelect.value = sortBy;
+            sortAndDisplayData();
+        };
+    <\/script>
+</body>
+</html>`;
+
+            const blob = new Blob([exportHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const safeFilename = topLevelArtistName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            a.download = `${safeFilename}_albums.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function decodeHTMLEntities(text) {
+            if (!text) return '';
+            const textArea = document.createElement('textarea');
+            textArea.innerHTML = text;
+            return textArea.value;
+        }
+
+        function durationToSeconds(durationStr) {
+            if (!durationStr || typeof durationStr !== 'string') return 0;
+            const parts = durationStr.split(':').map(Number);
+            if (parts.length === 2) {
+                return (parts[0] * 60) + parts[1];
+            }
+            if (parts.length === 3) {
+                return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+            }
+            return 0; // Invalid format
+        }
+
+        function secondsToDurationFormat(totalSeconds) {
+            if (isNaN(totalSeconds) || totalSeconds < 0) return '00:00:00';
+
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+
+            const pad = (num) => String(num).padStart(2, '0');
+
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorBox.style.display = 'block';
+        }
+
+        function hideError() {
+            errorBox.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
