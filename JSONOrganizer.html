@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{PAGE_TITLE_PLACEHOLDER}}</title>
+    <title>JSON Album Sorter</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -365,7 +365,7 @@
         const iconDesc = document.getElementById('icon-desc');
 
         // --- State variables ---
-        let processedAlbums = '{{ALBUM_DATA_PLACEHOLDER}}';
+        let processedAlbums = [];
         let sortAscending = true;
         let sortBy = 'title'; // 'duration', 'date', 'tracks', 'title'
         let topLevelArtistName = '';
