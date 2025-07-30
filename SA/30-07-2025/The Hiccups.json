@@ -1,0 +1,95 @@
+{
+    "The Hiccups": [
+        {
+            "url": "https://therealhiccups.bandcamp.com/album/lucked-in-the-head",
+            "title": "Lucked In the Head",
+            "artist": "The Hiccups",
+            "label": "Deafbox Industries",
+            "classification": "paid",
+            "tags": [
+                "Experimental",
+                "drone",
+                "dub",
+                "electronic",
+                "hip hop",
+                "industrial",
+                "noise",
+                "plunderphonics",
+                "psychedelia",
+                "turntablism",
+                "vaporwave",
+                "California"
+            ],
+            "item_id": 4242023066,
+            "art_id": 2107060676,
+            "is_preorder": false,
+            "datePublished": "01 Apr 2024 00:00:00 GMT",
+            "about": null,
+            "credits": "released April 1, 2024",
+            "license": "all rights reserved",
+            "coverUrl_0": "https://f4.bcbits.com/img/a2107060676_0",
+            "trackinfo": [
+                {
+                    "title": "For What We Was Is Not",
+                    "duration": "06:13",
+                    "lyrics": null,
+                    "label": "Deafbox Industries",
+                    "track_id": 1419149735,
+                    "track_num": "1",
+                    "artist": "The Hiccups",
+                    "url": "https://therealhiccups.bandcamp.com/track/for-what-we-was-is-not",
+                    "trackCoverUrl_0": "https://f4.bcbits.com/img/a2107060676_0",
+                    "art_id": 2107060676,
+                    "about": null,
+                    "credits": "from Lucked In the Head, released April 1, 2024",
+                    "license": "all rights reserved"
+                },
+                {
+                    "title": "Was Is Not Now",
+                    "duration": "03:51",
+                    "lyrics": null,
+                    "label": "Deafbox Industries",
+                    "track_id": 1097858908,
+                    "track_num": "2",
+                    "artist": "The Hiccups",
+                    "url": "https://therealhiccups.bandcamp.com/track/was-is-not-now",
+                    "trackCoverUrl_0": "https://f4.bcbits.com/img/a2107060676_0",
+                    "art_id": 2107060676,
+                    "about": null,
+                    "credits": "from Lucked In the Head, released April 1, 2024",
+                    "license": "all rights reserved"
+                },
+                {
+                    "title": "This Was Not What We Was",
+                    "duration": "01:52",
+                    "lyrics": null,
+                    "label": "Deafbox Industries",
+                    "track_id": 380313964,
+                    "track_num": "3",
+                    "artist": "The Hiccups",
+                    "url": "https://therealhiccups.bandcamp.com/track/this-was-not-what-we-was",
+                    "trackCoverUrl_0": "https://f4.bcbits.com/img/a2107060676_0",
+                    "art_id": 2107060676,
+                    "about": null,
+                    "credits": "from Lucked In the Head, released April 1, 2024",
+                    "license": "all rights reserved"
+                },
+                {
+                    "title": "The Was Not Is Before",
+                    "duration": "03:22",
+                    "lyrics": null,
+                    "label": "Deafbox Industries",
+                    "track_id": 281602424,
+                    "track_num": "4",
+                    "artist": "The Hiccups",
+                    "url": "https://therealhiccups.bandcamp.com/track/the-was-not-is-before",
+                    "trackCoverUrl_0": "https://f4.bcbits.com/img/a2107060676_0",
+                    "art_id": 2107060676,
+                    "about": null,
+                    "credits": "from Lucked In the Head, released April 1, 2024",
+                    "license": "all rights reserved"
+                }
+            ]
+        }
+    ]
+}
